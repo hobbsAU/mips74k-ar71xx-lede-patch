@@ -15,7 +15,7 @@ index 3099448..ec126a6 100644
 +    CPU_CFLAGS_24kc = -march=74kc
 +    CPU_CFLAGS_24kec = -march=24kec
 +    CPU_CFLAGS_34kc = -march=34kc
-+    CPU_CFLAGS_74kc = -march=74kc
++    CPU_CFLAGS_74kc = -march=74kc -mdspr2
 +    CPU_CFLAGS_1004kc = -march=1004kc
      CPU_CFLAGS_octeon = -march=octeon -mabi=64
    endif
