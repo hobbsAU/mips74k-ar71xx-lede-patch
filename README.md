@@ -17,7 +17,7 @@ How to use
 
 Clone this Repository and copy into the LEDE repository
 
-    git clone -b lede-17.01 https://github.com/hobbsAU/mips74k-lede-patch.git temp; mv temp/* lede/; rm -rf temp
+    git clone -b lede-17.01 git@github.com:hobbsAU/mips74k-ar71xx-lede-patch.git temp; mv temp/* lede/; rm -rf temp
 
 Change directory into the LEDE Repository
 
