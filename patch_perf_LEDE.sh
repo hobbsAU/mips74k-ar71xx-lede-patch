@@ -2,6 +2,10 @@
 make dirclean
 ./scripts/feeds update -a
 ./scripts/feeds install -a
+        for i in $( ls perf_patches ); do
+            echo Applying patch $i
+            patch -p1 < patch/$i
+        done
 make defconfig
 rm .config
 make defconfig
