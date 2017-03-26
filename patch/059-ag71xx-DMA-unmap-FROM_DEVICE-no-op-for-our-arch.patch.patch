@@ -1,6 +1,6 @@
 --- a/target/linux/ar71xx/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c
 +++ b/target/linux/ar71xx/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c
-@@ -194,8 +194,6 @@ static void ag71xx_ring_rx_clean(struct
+@@ -200,8 +198,6 @@ static void ag71xx_ring_rx_clean(struct
  
  	for (i = 0; i < ring->size; i++)
  		if (ring->buf[i].rx_buf) {
@@ -9,7 +9,7 @@
  			skb_free_frag(ring->buf[i].rx_buf);
  		}
  }
-@@ -762,7 +760,7 @@ static netdev_tx_t ag71xx_hard_start_xmi
+@@ -811,7 +811,7 @@ static netdev_tx_t ag71xx_hard_start_xmi
  	/* setup descriptor fields */
  	n = ag71xx_fill_dma_desc(ring, (u32) dma_addr, skb->len & ag->desc_pktlen_mask);
  	if (n < 0)
@@ -18,7 +18,7 @@
  
  	i = (ring->curr + n - 1) % ring->size;
  	ring->buf[i].len = skb->len;
-@@ -792,9 +790,6 @@ static netdev_tx_t ag71xx_hard_start_xmi
+@@ -844,9 +841,6 @@ static netdev_tx_t ag71xx_hard_start_xmi
  
  	return NETDEV_TX_OK;
  
@@ -28,7 +28,7 @@
  err_drop:
  	dev->stats.tx_dropped++;
  
-@@ -985,9 +980,6 @@ static int ag71xx_rx_packets(struct ag71
+@@ -1051,9 +1046,6 @@ static int ag71xx_rx_packets(struct ag71
  		pktlen = desc->ctrl & pktlen_mask;
  		pktlen -= ETH_FCS_LEN;
  

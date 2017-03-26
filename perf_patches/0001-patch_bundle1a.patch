@@ -1,0 +1,549 @@
+From 081f8c6071ba7567f8a26e023c5f9510aa58edcd Mon Sep 17 00:00:00 2001
+From: hobbsau <adrianhobbs@gmail.com>
+Date: Sun, 26 Mar 2017 18:18:51 +1100
+Subject: [PATCH] patch_bundle1a
+
+---
+ mydiffconfig                                       | 21 +++++++++++++++++++++
+ package/libs/libubox/patches/01-CMake.patch        | 11 +++++++++++
+ package/libs/libubox/patches/02-Cmake-lua.patch    | 11 +++++++++++
+ package/libs/uclient/patches/CMakeList.patch       | 11 +++++++++++
+ package/libs/ustream-ssl/patches/01-Cmake.patch    | 11 +++++++++++
+ .../network/config/firewall/patches/01-Cmake.patch | 11 +++++++++++
+ .../network/config/netifd/patches/01-CMake.patch   | 11 +++++++++++
+ .../services/odhcpd/patches/CMakeLists.patch       | 11 +++++++++++
+ .../network/services/relayd/patches/01-CMake.patch | 11 +++++++++++
+ .../network/services/uhttpd/patches/01-CMake.patch | 11 +++++++++++
+ .../network/utils/umbim/patches/CMakeList.patch    | 11 +++++++++++
+ package/system/fstools/patches/01-Cmake.patch      | 11 +++++++++++
+ package/system/procd/patches/CMakeList.patch       | 22 ++++++++++++++++++++++
+ package/system/rpcd/patches/CMakeList.patch        | 11 +++++++++++
+ package/system/ubox/patches/01-CMake.patch         | 11 +++++++++++
+ package/system/ubus/patches/01-CMake-lua.patch     | 11 +++++++++++
+ package/system/ubus/patches/01-CMake.patch         | 11 +++++++++++
+ package/system/uci/patches/01-CMake.patch          | 11 +++++++++++
+ package/system/uci/patches/02-Cmake-lua.patch      | 11 +++++++++++
+ package/system/usign/patches/CMakeList.patch       | 11 +++++++++++
+ package/utils/jsonfilter/patches/01-Cmake.patch    | 11 +++++++++++
+ package/utils/usbmode/patches/01-Cmake.patch       | 11 +++++++++++
+ .../patches-4.4/221-kernel-mtune-74kc.patch.patch  | 13 +++++++++++++
+ .../222-kernel-branch-likely-74kc.patch.patch      | 14 ++++++++++++++
+ .../patches-4.4/008-remove-kernel-debug.patch      | 10 ++++++++++
+ .../generic/patches-4.4/202-funit-at-a-time.patch  | 11 +++++++++++
+ toolchain/musl/patches/930-mips-optimize.patch     | 11 +++++++++++
+ 27 files changed, 322 insertions(+)
+ create mode 100644 mydiffconfig
+ create mode 100644 package/libs/libubox/patches/01-CMake.patch
+ create mode 100644 package/libs/libubox/patches/02-Cmake-lua.patch
+ create mode 100644 package/libs/uclient/patches/CMakeList.patch
+ create mode 100644 package/libs/ustream-ssl/patches/01-Cmake.patch
+ create mode 100644 package/network/config/firewall/patches/01-Cmake.patch
+ create mode 100644 package/network/config/netifd/patches/01-CMake.patch
+ create mode 100644 package/network/services/odhcpd/patches/CMakeLists.patch
+ create mode 100644 package/network/services/relayd/patches/01-CMake.patch
+ create mode 100644 package/network/services/uhttpd/patches/01-CMake.patch
+ create mode 100644 package/network/utils/umbim/patches/CMakeList.patch
+ create mode 100644 package/system/fstools/patches/01-Cmake.patch
+ create mode 100644 package/system/procd/patches/CMakeList.patch
+ create mode 100644 package/system/rpcd/patches/CMakeList.patch
+ create mode 100644 package/system/ubox/patches/01-CMake.patch
+ create mode 100644 package/system/ubus/patches/01-CMake-lua.patch
+ create mode 100644 package/system/ubus/patches/01-CMake.patch
+ create mode 100644 package/system/uci/patches/01-CMake.patch
+ create mode 100644 package/system/uci/patches/02-Cmake-lua.patch
+ create mode 100644 package/system/usign/patches/CMakeList.patch
+ create mode 100644 package/utils/jsonfilter/patches/01-Cmake.patch
+ create mode 100644 package/utils/usbmode/patches/01-Cmake.patch
+ create mode 100644 target/linux/ar71xx/patches-4.4/221-kernel-mtune-74kc.patch.patch
+ create mode 100644 target/linux/ar71xx/patches-4.4/222-kernel-branch-likely-74kc.patch.patch
+ create mode 100644 target/linux/generic/patches-4.4/008-remove-kernel-debug.patch
+ create mode 100644 target/linux/generic/patches-4.4/202-funit-at-a-time.patch
+ create mode 100644 toolchain/musl/patches/930-mips-optimize.patch
+
+diff --git a/mydiffconfig b/mydiffconfig
+new file mode 100644
+index 0000000000..55ccadf98c
+--- /dev/null
++++ b/mydiffconfig
+@@ -0,0 +1,21 @@
++CONFIG_TARGET_ar71xx=y
++CONFIG_TARGET_ar71xx_generic=y
++CONFIG_TARGET_ar71xx_generic_DEVICE_archer-c7-v2=y
++CONFIG_PACKAGE_libiwinfo-lua=y
++CONFIG_PACKAGE_liblua=y
++CONFIG_PACKAGE_libubus-lua=y
++CONFIG_PACKAGE_libuci-lua=y
++CONFIG_PACKAGE_lua=y
++CONFIG_PACKAGE_luci=y
++CONFIG_PACKAGE_luci-app-firewall=y
++CONFIG_PACKAGE_luci-base=y
++CONFIG_PACKAGE_luci-lib-ip=y
++CONFIG_PACKAGE_luci-lib-jsonc=y
++CONFIG_PACKAGE_luci-lib-nixio=y
++CONFIG_PACKAGE_luci-mod-admin-full=y
++CONFIG_PACKAGE_luci-proto-ipv6=y
++CONFIG_PACKAGE_luci-proto-ppp=y
++CONFIG_PACKAGE_luci-theme-bootstrap=y
++CONFIG_PACKAGE_rpcd=y
++CONFIG_PACKAGE_uhttpd=y
++CONFIG_PACKAGE_uhttpd-mod-ubus=y
+diff --git a/package/libs/libubox/patches/01-CMake.patch b/package/libs/libubox/patches/01-CMake.patch
+new file mode 100644
+index 0000000000..728053e637
+--- /dev/null
++++ b/package/libs/libubox/patches/01-CMake.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt	2014-11-24 20:24:07.000000000 +0800
+++++ b/CMakeLists.txt	2015-11-27 20:19:41.179470886 +0800
++@@ -3,7 +3,7 @@ INCLUDE(CheckLibraryExists)
++ INCLUDE(CheckFunctionExists)
++ 
++ PROJECT(ubox C)
++-ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -g3 -Wmissing-declarations)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -Wmissing-declarations)
++ 
++ OPTION(BUILD_LUA "build Lua plugin" ON)
++ 
+diff --git a/package/libs/libubox/patches/02-Cmake-lua.patch b/package/libs/libubox/patches/02-Cmake-lua.patch
+new file mode 100644
+index 0000000000..2a05c2a79d
+--- /dev/null
++++ b/package/libs/libubox/patches/02-Cmake-lua.patch
+@@ -0,0 +1,11 @@
++--- a/lua/CMakeLists.txt	2014-11-24 20:24:07.000000000 +0800
+++++ b/lua/CMakeLists.txt	2015-11-27 20:22:06.817835425 +0800
++@@ -15,7 +15,7 @@ IF(NOT LUA_CFLAGS)
++ 	ENDIF()
++ ENDIF()
++ 
++-ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -g3 -I.. ${LUA_CFLAGS})
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -I.. ${LUA_CFLAGS})
++ LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
++ 
++ IF(APPLE)
+diff --git a/package/libs/uclient/patches/CMakeList.patch b/package/libs/uclient/patches/CMakeList.patch
+new file mode 100644
+index 0000000000..d1474c0414
+--- /dev/null
++++ b/package/libs/uclient/patches/CMakeList.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt
+++++ b/CMakeLists.txt
++@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.6)
++ INCLUDE(CheckIncludeFiles)
++ 
++ PROJECT(uclient C)
++-ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -g3 -Wmissing-declarations)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -Wmissing-declarations)
++ 
++ SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
++ 
+diff --git a/package/libs/ustream-ssl/patches/01-Cmake.patch b/package/libs/ustream-ssl/patches/01-Cmake.patch
+new file mode 100644
+index 0000000000..ace8af775f
+--- /dev/null
++++ b/package/libs/ustream-ssl/patches/01-Cmake.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt	2014-11-15 16:30:54.000000000 +0800
+++++ b/CMakeLists.txt	2015-11-27 21:01:56.248238207 +0800
++@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.6)
++ INCLUDE(CheckIncludeFiles)
++ 
++ PROJECT(ustream-ssl C)
++-ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -g3 -Wmissing-declarations)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -Wmissing-declarations)
++ 
++ SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
++ 
+diff --git a/package/network/config/firewall/patches/01-Cmake.patch b/package/network/config/firewall/patches/01-Cmake.patch
+new file mode 100644
+index 0000000000..2bb461c95f
+--- /dev/null
++++ b/package/network/config/firewall/patches/01-Cmake.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt	2014-11-15 16:49:45.000000000 +0800
+++++ b/CMakeLists.txt	2015-11-27 21:11:12.180276155 +0800
++@@ -1,7 +1,7 @@
++ cmake_minimum_required(VERSION 2.6)
++ 
++ PROJECT(firewall3 C)
++-ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -g3 -Wmissing-declarations)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -Wmissing-declarations)
++ 
++ SET(iptc_libs   ip4tc)
++ 
+diff --git a/package/network/config/netifd/patches/01-CMake.patch b/package/network/config/netifd/patches/01-CMake.patch
+new file mode 100644
+index 0000000000..15290ab9ae
+--- /dev/null
++++ b/package/network/config/netifd/patches/01-CMake.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt	2014-11-24 20:24:07.000000000 +0800
+++++ b/CMakeLists.txt	2015-11-27 20:19:41.179470886 +0800
++@@ -1,7 +1,7 @@
++ cmake_minimum_required(VERSION 2.6)
++ 
++ PROJECT(netifd C)
++-ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -Wmissing-declarations)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -Wmissing-declarations)
++ 
++ SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
++ 
+diff --git a/package/network/services/odhcpd/patches/CMakeLists.patch b/package/network/services/odhcpd/patches/CMakeLists.patch
+new file mode 100644
+index 0000000000..b1f6dbf029
+--- /dev/null
++++ b/package/network/services/odhcpd/patches/CMakeLists.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt	2014-11-15 17:25:12.000000000 +0800
+++++ b/CMakeLists.txt	2015-11-28 13:58:51.509147565 +0800
++@@ -5,7 +5,7 @@ cmake_policy(SET CMP0015 NEW)
++ project(odhcpd C)
++ 
++ set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
++-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -std=c99")
+++set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
++ 
++ 
++ add_definitions(-D_GNU_SOURCE -Wall -Werror -Wextra)
+diff --git a/package/network/services/relayd/patches/01-CMake.patch b/package/network/services/relayd/patches/01-CMake.patch
+new file mode 100644
+index 0000000000..4cd66fbedf
+--- /dev/null
++++ b/package/network/services/relayd/patches/01-CMake.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt	2014-11-15 16:51:34.000000000 +0800
+++++ b/CMakeLists.txt	2015-11-27 21:13:37.032555255 +0800
++@@ -1,7 +1,7 @@
++ cmake_minimum_required(VERSION 2.8)
++ 
++ PROJECT(relayd C)
++-ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -g3)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99)
++ 
++ IF(APPLE)
++   INCLUDE_DIRECTORIES(/opt/local/include)
+diff --git a/package/network/services/uhttpd/patches/01-CMake.patch b/package/network/services/uhttpd/patches/01-CMake.patch
+new file mode 100644
+index 0000000000..168dd65596
+--- /dev/null
++++ b/package/network/services/uhttpd/patches/01-CMake.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt	2014-11-15 16:49:31.000000000 +0800
+++++ b/CMakeLists.txt	2015-11-27 21:08:25.966960023 +0800
++@@ -5,7 +5,7 @@ PROJECT(uhttpd C)
++ INCLUDE (CheckFunctionExists)
++ 
++ SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
++-ADD_DEFINITIONS(-D_FILE_OFFSET_BITS=64 -Os -Wall -Werror -Wmissing-declarations --std=gnu99 -g3)
+++ADD_DEFINITIONS(-D_FILE_OFFSET_BITS=64 -Wall -Werror -Wmissing-declarations --std=gnu99)
++ 
++ OPTION(TLS_SUPPORT "TLS support" ON)
++ OPTION(LUA_SUPPORT "Lua support" ON)
+diff --git a/package/network/utils/umbim/patches/CMakeList.patch b/package/network/utils/umbim/patches/CMakeList.patch
+new file mode 100644
+index 0000000000..f14e25285e
+--- /dev/null
++++ b/package/network/utils/umbim/patches/CMakeList.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt	2014-11-15 17:25:19.000000000 +0800
+++++ b/CMakeLists.txt	2015-11-27 21:23:16.921701679 +0800
++@@ -1,7 +1,7 @@
++ cmake_minimum_required(VERSION 2.6)
++ 
++ PROJECT(umbim C)
++-ADD_DEFINITIONS(-Os -ggdb -Wall -Werror --std=gnu99 -Wmissing-declarations)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -Wmissing-declarations)
++ 
++ SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
++ 
+diff --git a/package/system/fstools/patches/01-Cmake.patch b/package/system/fstools/patches/01-Cmake.patch
+new file mode 100644
+index 0000000000..2b82bc3b04
+--- /dev/null
++++ b/package/system/fstools/patches/01-Cmake.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt	2015-02-26 19:35:58.000000000 +0800
+++++ b/CMakeLists.txt	2015-11-27 21:25:41.468993741 +0800
++@@ -1,7 +1,7 @@
++ cmake_minimum_required(VERSION 2.6)
++ 
++ PROJECT(fs-tools C)
++-ADD_DEFINITIONS(-Os -ggdb -Wall -Werror --std=gnu99 -Wmissing-declarations)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -Wmissing-declarations)
++ 
++ SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
++ 
+diff --git a/package/system/procd/patches/CMakeList.patch b/package/system/procd/patches/CMakeList.patch
+new file mode 100644
+index 0000000000..3645129798
+--- /dev/null
++++ b/package/system/procd/patches/CMakeList.patch
+@@ -0,0 +1,22 @@
++--- a/upgraded/CMakeLists.txt
+++++ b/upgraded/CMakeLists.txt
++@@ -1,7 +1,7 @@
++ cmake_minimum_required(VERSION 2.6)
++ 
++ PROJECT(upgraded C)
++-ADD_DEFINITIONS(-Os -ggdb -Wall -Werror --std=gnu99 -Wmissing-declarations)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -Wmissing-declarations)
++ set(CMAKE_EXE_LINKER_FLAGS "-static -fPIC")
++ set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
++ set(CMAKE_EXE_LINK_DYNAMIC_C_FLAGS)
++--- a/CMakeLists.txt
+++++ b/CMakeLists.txt
++@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
++ 
++ PROJECT(procd C)
++ INCLUDE(GNUInstallDirs)
++-ADD_DEFINITIONS(-Os -ggdb -Wall -Werror --std=gnu99 -Wmissing-declarations)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -Wmissing-declarations)
++ 
++ SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
++ 
+diff --git a/package/system/rpcd/patches/CMakeList.patch b/package/system/rpcd/patches/CMakeList.patch
+new file mode 100644
+index 0000000000..8530b49aaa
+--- /dev/null
++++ b/package/system/rpcd/patches/CMakeList.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt
+++++ b/CMakeLists.txt
++@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.6)
++ INCLUDE(CheckFunctionExists)
++ 
++ PROJECT(rpcd C)
++-ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -g3 -Wmissing-declarations)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -Wmissing-declarations)
++ INCLUDE_DIRECTORIES(include)
++ 
++ OPTION(FILE_SUPPORT "File plugin support" ON)
+diff --git a/package/system/ubox/patches/01-CMake.patch b/package/system/ubox/patches/01-CMake.patch
+new file mode 100644
+index 0000000000..edbbc91284
+--- /dev/null
++++ b/package/system/ubox/patches/01-CMake.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt	2014-11-24 20:24:07.000000000 +0800
+++++ b/CMakeLists.txt	2015-11-27 20:19:41.179470886 +0800
++@@ -1,7 +1,7 @@
++ cmake_minimum_required(VERSION 2.6)
++ 
++ PROJECT(ubox C)
++-ADD_DEFINITIONS(-Os -ggdb -Wall -Werror --std=gnu99 -Wmissing-declarations)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -Wmissing-declarations)
++ 
++ SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
++ 
+diff --git a/package/system/ubus/patches/01-CMake-lua.patch b/package/system/ubus/patches/01-CMake-lua.patch
+new file mode 100644
+index 0000000000..5305d71040
+--- /dev/null
++++ b/package/system/ubus/patches/01-CMake-lua.patch
+@@ -0,0 +1,11 @@
++--- a/lua/CMakeLists.txt	2014-11-15 16:25:57.000000000 +0800
+++++ b/lua/CMakeLists.txt	2015-11-27 20:37:15.836035369 +0800
++@@ -15,7 +15,7 @@ IF(NOT LUA_CFLAGS)
++ 	ENDIF()
++ ENDIF()
++ 
++-ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -g3 -I.. ${LUA_CFLAGS})
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -I.. ${LUA_CFLAGS})
++ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
++ LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
++ 
+diff --git a/package/system/ubus/patches/01-CMake.patch b/package/system/ubus/patches/01-CMake.patch
+new file mode 100644
+index 0000000000..47a4ae1e70
+--- /dev/null
++++ b/package/system/ubus/patches/01-CMake.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt	2014-11-24 20:24:07.000000000 +0800
+++++ b/CMakeLists.txt	2015-11-27 20:19:41.179470886 +0800
++@@ -1,7 +1,7 @@
++ cmake_minimum_required(VERSION 2.6)
++ 
++ PROJECT(ubus C)
++-ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -g3 -Wmissing-declarations)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -Wmissing-declarations)
++ 
++ OPTION(BUILD_LUA "build Lua plugin" ON)
++ OPTION(BUILD_EXAMPLES "build examples" ON)
+diff --git a/package/system/uci/patches/01-CMake.patch b/package/system/uci/patches/01-CMake.patch
+new file mode 100644
+index 0000000000..c314b96d96
+--- /dev/null
++++ b/package/system/uci/patches/01-CMake.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt	2014-11-24 20:24:07.000000000 +0800
+++++ b/CMakeLists.txt	2015-11-27 20:19:41.179470886 +0800
++@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.6)
++ PROJECT(uci C)
++ 
++ SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
++-ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -g3 -I. -DUCI_PREFIX="${CMAKE_INSTALL_PREFIX}")
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -I. -DUCI_PREFIX="${CMAKE_INSTALL_PREFIX}")
++ 
++ OPTION(UCI_DEBUG "debugging support" OFF)
++ OPTION(UCI_DEBUG_TYPECAST "typecast debugging support" OFF)
+diff --git a/package/system/uci/patches/02-Cmake-lua.patch b/package/system/uci/patches/02-Cmake-lua.patch
+new file mode 100644
+index 0000000000..2a05c2a79d
+--- /dev/null
++++ b/package/system/uci/patches/02-Cmake-lua.patch
+@@ -0,0 +1,11 @@
++--- a/lua/CMakeLists.txt	2014-11-24 20:24:07.000000000 +0800
+++++ b/lua/CMakeLists.txt	2015-11-27 20:22:06.817835425 +0800
++@@ -15,7 +15,7 @@ IF(NOT LUA_CFLAGS)
++ 	ENDIF()
++ ENDIF()
++ 
++-ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -g3 -I.. ${LUA_CFLAGS})
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -I.. ${LUA_CFLAGS})
++ LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
++ 
++ IF(APPLE)
+diff --git a/package/system/usign/patches/CMakeList.patch b/package/system/usign/patches/CMakeList.patch
+new file mode 100644
+index 0000000000..4044523287
+--- /dev/null
++++ b/package/system/usign/patches/CMakeList.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt
+++++ b/CMakeLists.txt
++@@ -1,7 +1,7 @@
++ cmake_minimum_required(VERSION 2.8)
++ 
++ PROJECT(usign C)
++-ADD_DEFINITIONS(-O2 -Wall -Werror --std=gnu99 -g3 -Wmissing-declarations)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -Wmissing-declarations)
++ 
++ SET(SOURCES ed25519.c edsign.c f25519.c fprime.c sha512.c main.c)
++ 
+diff --git a/package/utils/jsonfilter/patches/01-Cmake.patch b/package/utils/jsonfilter/patches/01-Cmake.patch
+new file mode 100644
+index 0000000000..d5f4709185
+--- /dev/null
++++ b/package/utils/jsonfilter/patches/01-Cmake.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt	2014-11-15 16:30:54.000000000 +0800
+++++ b/CMakeLists.txt	2015-11-27 21:01:56.248238207 +0800
++@@ -1,7 +1,7 @@
++ cmake_minimum_required(VERSION 2.6)
++ 
++ PROJECT(jsonpath C)
++-ADD_DEFINITIONS(-Os -Wall -Werror --std=gnu99 -Wmissing-declarations -Wno-error=unused-variable -ffunction-sections -D_GNU_SOURCE)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -Wmissing-declarations -Wno-error=unused-variable -ffunction-sections -D_GNU_SOURCE)
++ 
++ SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "-Wl,--gc-sections")
++ 
+diff --git a/package/utils/usbmode/patches/01-Cmake.patch b/package/utils/usbmode/patches/01-Cmake.patch
+new file mode 100644
+index 0000000000..369b0f6e8c
+--- /dev/null
++++ b/package/utils/usbmode/patches/01-Cmake.patch
+@@ -0,0 +1,11 @@
++--- a/CMakeLists.txt	2014-11-15 17:26:56.000000000 +0800
+++++ b/CMakeLists.txt	2015-11-27 21:27:22.483199136 +0800
++@@ -1,7 +1,7 @@
++ cmake_minimum_required(VERSION 2.6)
++ 
++ PROJECT(usbmode C)
++-ADD_DEFINITIONS(-Os -ggdb -Wall -Werror --std=gnu99 -Wmissing-declarations)
+++ADD_DEFINITIONS(-Wall -Werror --std=gnu99 -Wmissing-declarations)
++ 
++ SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
++ 
+diff --git a/target/linux/ar71xx/patches-4.4/221-kernel-mtune-74kc.patch.patch b/target/linux/ar71xx/patches-4.4/221-kernel-mtune-74kc.patch.patch
+new file mode 100644
+index 0000000000..a3bfefdc0e
+--- /dev/null
++++ b/target/linux/ar71xx/patches-4.4/221-kernel-mtune-74kc.patch.patch
+@@ -0,0 +1,13 @@
++--- a/arch/mips/Makefile
+++++ b/arch/mips/Makefile
++@@ -145,8 +145,8 @@ cflags-$(CONFIG_CPU_R4X00)	+= -march=r46
++ cflags-$(CONFIG_CPU_TX49XX)	+= -march=r4600 -Wa,--trap
++ cflags-$(CONFIG_CPU_MIPS32_R1)	+= $(call cc-option,-march=mips32,-mips32 -U_MIPS_ISA -D_MIPS_ISA=_MIPS_ISA_MIPS32) \
++ 			-Wa,-mips32 -Wa,--trap
++-cflags-$(CONFIG_CPU_MIPS32_R2)	+= $(call cc-option,-march=mips32r2 -mtune=34kc,-mips32r2 -U_MIPS_ISA -D_MIPS_ISA=_MIPS_ISA_MIPS32) \
++-			-Wa,-mips32r2 -Wa,--trap
+++cflags-$(CONFIG_CPU_MIPS32_R2)	+= $(call cc-option,-march=74kc -mno-dspr2 -mno-branch-likely -mno-mips16 -mno-interlink-compressed -msym32 -fno-caller-saves -fomit-frame-pointer -mframe-header-opt,-march=74kc -mno-dspr2 -mno-branch-likely -mno-mips16 -mno-interlink-compressed -msym32 -fno-caller-saves -fomit-frame-pointer -mframe-header-opt -U_MIPS_ISA -D_MIPS_ISA=_MIPS_ISA_MIPS32) \
+++			-Wa,-march=74kc -mno-dspr2 -mno-branch-likely -mno-mips16 -mno-interlink-compressed -msym32 -fno-caller-saves -fomit-frame-pointer -mframe-header-opt -Wa,--trap
++ cflags-$(CONFIG_CPU_MIPS32_R6)	+= -march=mips32r6 -Wa,--trap
++ cflags-$(CONFIG_CPU_MIPS64_R1)	+= $(call cc-option,-march=mips64,-mips64 -U_MIPS_ISA -D_MIPS_ISA=_MIPS_ISA_MIPS64) \
++ 			-Wa,-mips64 -Wa,--trap
+diff --git a/target/linux/ar71xx/patches-4.4/222-kernel-branch-likely-74kc.patch.patch b/target/linux/ar71xx/patches-4.4/222-kernel-branch-likely-74kc.patch.patch
+new file mode 100644
+index 0000000000..8efde37e54
+--- /dev/null
++++ b/target/linux/ar71xx/patches-4.4/222-kernel-branch-likely-74kc.patch.patch
+@@ -0,0 +1,14 @@
++--- a/arch/mips/Makefile
+++++ b/arch/mips/Makefile
++@@ -87,9 +87,9 @@ all-$(CONFIG_SYS_SUPPORTS_ZBOOT)+= vmlin
++ # machines may also.  Since BFD is incredibly buggy with respect to
++ # crossformat linking we rely on the elf2ecoff tool for format conversion.
++ #
++-cflags-y			+= -G 0 -mno-abicalls -fno-pic -pipe -mno-branch-likely
+++cflags-y			+= -march=74kc -mno-dspr2  -mno-abicalls -fno-pic -pipe -mno-branch-likely -mno-mips16 -mno-interlink-compressed -msym32 -fno-caller-saves -fomit-frame-pointer -mframe-header-opt
++ cflags-y			+= -msoft-float
++-LDFLAGS_vmlinux			+= -G 0 -static -n -nostdlib --gc-sections
+++LDFLAGS_vmlinux			+= -static -n -nostdlib --gc-sections
++ ifdef CONFIG_64BIT
++ KBUILD_AFLAGS_MODULE		+= -mlong-calls
++ KBUILD_CFLAGS_MODULE		+= -mlong-calls
+diff --git a/target/linux/generic/patches-4.4/008-remove-kernel-debug.patch b/target/linux/generic/patches-4.4/008-remove-kernel-debug.patch
+new file mode 100644
+index 0000000000..a5b843a947
+--- /dev/null
++++ b/target/linux/generic/patches-4.4/008-remove-kernel-debug.patch
+@@ -0,0 +1,10 @@
++--- a/init/Kconfig	2017-01-31 03:02:50.000000000 +0800
+++++ b/init/Kconfig	2017-01-31 08:20:27.460797686 +0800
++@@ -1380,7 +1380,6 @@ config BPF
++ menuconfig EXPERT
++ 	bool "Configure standard kernel features (expert users)"
++ 	# Unhide debug options, to make the on-by-default options visible
++-	select DEBUG_KERNEL
++ 	help
++ 	  This option allows certain base kernel options and settings
++           to be disabled or tweaked. This is for specialized
+diff --git a/target/linux/generic/patches-4.4/202-funit-at-a-time.patch b/target/linux/generic/patches-4.4/202-funit-at-a-time.patch
+new file mode 100644
+index 0000000000..0d0b14c44d
+--- /dev/null
++++ b/target/linux/generic/patches-4.4/202-funit-at-a-time.patch
+@@ -0,0 +1,11 @@
++--- a/Makefile
+++++ b/Makefile
++@@ -759,7 +759,7 @@ endif
++ ifdef CONFIG_DEBUG_SECTION_MISMATCH
++ KBUILD_CFLAGS += $(call cc-option, -fno-inline-functions-called-once)
++ endif
++-
+++CFLAGS += $(call cc-option,-funit-at-a-time,)
++ # arch Makefile may override CC so keep this after arch Makefile is included
++ NOSTDINC_FLAGS += -nostdinc -isystem $(shell $(CC) -print-file-name=include)
++ CHECKFLAGS     += $(NOSTDINC_FLAGS)
+diff --git a/toolchain/musl/patches/930-mips-optimize.patch b/toolchain/musl/patches/930-mips-optimize.patch
+new file mode 100644
+index 0000000000..d6ad2d0cd7
+--- /dev/null
++++ b/toolchain/musl/patches/930-mips-optimize.patch
+@@ -0,0 +1,11 @@
++--- a/Makefile
+++++ b/Makefile
++@@ -33,7 +33,7 @@ LDFLAGS_AUTO =
++ LIBCC = -lgcc
++ CPPFLAGS =
++ CFLAGS =
++-CFLAGS_AUTO = -Os -pipe
+++CFLAGS_AUTO = -Os -pipe -march=74kc -mno-branch-likely -mno-mips16 -mno-interlink-compressed -msym32 -fno-caller-saves -fomit-frame-pointer -mframe-header-opt
++ CFLAGS_C99FSE = -std=c99 -ffreestanding -nostdinc 
++ 
++ CFLAGS_ALL = $(CFLAGS_C99FSE)
+-- 
+2.12.1
+

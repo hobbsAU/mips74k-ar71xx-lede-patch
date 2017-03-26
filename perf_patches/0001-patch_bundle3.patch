@@ -1,0 +1,228 @@
+From dd341eb1286adb9c5083e4ab6ea6019c01ab767c Mon Sep 17 00:00:00 2001
+From: hobbsau <adrianhobbs@gmail.com>
+Date: Sun, 26 Mar 2017 22:39:04 +1100
+Subject: [PATCH] patch_bundle3
+
+---
+ config/Config-devel.in                             |  4 ++--
+ package/base-files/files/etc/sysctl.conf           | 12 +++++++++++
+ package/libs/openssl/Config.in                     |  6 ++++++
+ package/libs/openssl/Makefile                      |  1 +
+ package/utils/busybox/Config-defaults.in           |  2 +-
+ .../net/ethernet/atheros/ag71xx/ag71xx_ar8216.c    |  5 +----
+ .../net/ethernet/atheros/ag71xx/ag71xx_main.c      |  8 +++----
+ .../010-no-l2-cache-runtime-check.patch            | 25 ++++++++++++++++++++++
+ .../patches-4.4/654-avoid_skb_cow_realloc.patch    | 20 +++++++++++++++++
+ 9 files changed, 72 insertions(+), 11 deletions(-)
+ create mode 100644 target/linux/ar71xx/patches-4.4/010-no-l2-cache-runtime-check.patch
+ create mode 100644 target/linux/generic/patches-4.4/654-avoid_skb_cow_realloc.patch
+
+diff --git a/config/Config-devel.in b/config/Config-devel.in
+index 4046fdf86e..6e2e3281d6 100644
+--- a/config/Config-devel.in
++++ b/config/Config-devel.in
+@@ -106,7 +106,7 @@ menuconfig DEVEL
+ 
+ 	config EXTRA_OPTIMIZATION
+ 		string "Additional compiler options" if DEVEL
+-		default "-fno-caller-saves -fno-plt" if !CONFIG_EXTERNAL_TOOLCHAIN && !arc
+-		default "-fno-caller-saves"
++		default "-fno-caller-saves -fno-plt -fomit-frame-pointer -DNDEBUG" if !CONFIG_EXTERNAL_TOOLCHAIN && !arc
++		default "-fno-caller-saves -DNDEBUG"
+ 		help
+ 		  Extra target-independent optimizations to use when building for the target.
+diff --git a/package/base-files/files/etc/sysctl.conf b/package/base-files/files/etc/sysctl.conf
+index 91a3ac9a02..eb73962374 100644
+--- a/package/base-files/files/etc/sysctl.conf
++++ b/package/base-files/files/etc/sysctl.conf
+@@ -1,13 +1,22 @@
+ kernel.panic=3
+ kernel.core_pattern=/tmp/%e.%t.%p.%s.core
++net.core.rmem_max=4194304
++net.core.wmem_max=4194304
++net.core.netdev_max_backlog=16384
++net.ipv4.tcp_max_syn_backlog=16384
++net.ipv4.tcp_rmem=4096 87380 2097152
++net.ipv4.tcp_wmem=4096 65536 2097152
++net.ipv4.tcp_slow_start_after_idle=0
+ 
+ net.ipv4.conf.default.arp_ignore=1
+ net.ipv4.conf.all.arp_ignore=1
++net.ipv4.conf.all.rp_filter=1
+ net.ipv4.ip_forward=1
+ net.ipv4.icmp_echo_ignore_broadcasts=1
+ net.ipv4.icmp_ignore_bogus_error_responses=1
+ net.ipv4.igmp_max_memberships=100
+ net.ipv4.tcp_fin_timeout=30
++net.ipv4.tcp_fastopen=3
+ net.ipv4.tcp_keepalive_time=120
+ net.ipv4.tcp_syncookies=1
+ net.ipv4.tcp_timestamps=1
+@@ -16,6 +25,9 @@ net.ipv4.tcp_dsack=1
+ 
+ net.ipv6.conf.default.forwarding=1
+ net.ipv6.conf.all.forwarding=1
++# Uncomment to enable ipv6 privacy mode
++#net.ipv6.conf.all.use_tempaddr=2
++#net.ipv6.conf.default.use_tempaddr=2
+ 
+ net.netfilter.nf_conntrack_acct=1
+ net.netfilter.nf_conntrack_checksum=0
+diff --git a/package/libs/openssl/Config.in b/package/libs/openssl/Config.in
+index dbcd11abfc..571db91ef5 100644
+--- a/package/libs/openssl/Config.in
++++ b/package/libs/openssl/Config.in
+@@ -50,6 +50,12 @@ config OPENSSL_ENGINE_DIGEST
+ 	depends on OPENSSL_ENGINE_CRYPTO
+ 	prompt "Digests acceleration support"
+ 
++config OPENSSL_THREADS
++	bool
++	prompt "Threading support"
++	default y
++	select PACKAGE_libpthread
++
+ config OPENSSL_HARDWARE_SUPPORT
+ 	bool
+ 	default n
+diff --git a/package/libs/openssl/Makefile b/package/libs/openssl/Makefile
+index 9b6430234e..8859ba741e 100644
+--- a/package/libs/openssl/Makefile
++++ b/package/libs/openssl/Makefile
+@@ -34,6 +34,7 @@ PKG_CONFIG_DEPENDS:= \
+ 	CONFIG_OPENSSL_WITH_EC2M \
+ 	CONFIG_OPENSSL_WITH_SSL3 \
+ 	CONFIG_OPENSSL_HARDWARE_SUPPORT \
++	CONFIG_OPENSSL_THREADS \
+ 	CONFIG_OPENSSL_WITH_DEPRECATED \
+ 	CONFIG_OPENSSL_WITH_DTLS \
+ 	CONFIG_OPENSSL_WITH_COMPRESSION \
+diff --git a/package/utils/busybox/Config-defaults.in b/package/utils/busybox/Config-defaults.in
+index 11cce03db9..330c122a20 100644
+--- a/package/utils/busybox/Config-defaults.in
++++ b/package/utils/busybox/Config-defaults.in
+@@ -246,7 +246,7 @@ config BUSYBOX_DEFAULT_FEATURE_EDITING_VI
+ 	default n
+ config BUSYBOX_DEFAULT_FEATURE_EDITING_HISTORY
+ 	int
+-	default 256
++	default 16
+ config BUSYBOX_DEFAULT_FEATURE_EDITING_SAVEHISTORY
+ 	bool
+ 	default n
+diff --git a/target/linux/ar71xx/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_ar8216.c b/target/linux/ar71xx/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_ar8216.c
+index 7ec43b7221..3ceaf54fd0 100644
+--- a/target/linux/ar71xx/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_ar8216.c
++++ b/target/linux/ar71xx/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_ar8216.c
+@@ -28,10 +28,7 @@ void ag71xx_add_ar8216_header(struct ag71xx *ag, struct sk_buff *skb)
+ int ag71xx_remove_ar8216_header(struct ag71xx *ag, struct sk_buff *skb,
+ 				int pktlen)
+ {
+-	u8 type;
+-
+-	type = skb->data[1] & AR8216_PACKET_TYPE_MASK;
+-	switch (type) {
++	switch (skb->data[1] & AR8216_PACKET_TYPE_MASK) {
+ 	case AR8216_PACKET_TYPE_NORMAL:
+ 		break;
+ 
+diff --git a/target/linux/ar71xx/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c b/target/linux/ar71xx/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c
+index 82a425e412..a45e053822 100644
+--- a/target/linux/ar71xx/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c
++++ b/target/linux/ar71xx/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c
+@@ -955,7 +955,7 @@ static int ag71xx_tx_packets(struct ag71xx *ag, bool flush)
+ 
+ //	DBG("%s: processing TX ring\n", ag->dev->name);
+ 
+-	while (ring->dirty + n != ring->curr) {
++	while (ring->curr != ring->dirty + n) {
+ 		unsigned int i = (ring->dirty + n) & ring_mask;
+ 		struct ag71xx_desc *desc = ag71xx_ring_desc(ring, i);
+ 		struct sk_buff *skb = ring->buf[i].skb;
+@@ -1034,7 +1034,7 @@ static int ag71xx_rx_packets(struct ag71xx *ag, int limit)
+ 		if (ag71xx_desc_empty(desc))
+ 			break;
+ 
+-		if ((ring->dirty + ring_size) == ring->curr) {
++		if (ring->curr == (ring->dirty + ring_size)) {
+ 			ag71xx_assert(0);
+ 			break;
+ 		}
+@@ -1106,7 +1106,7 @@ static int ag71xx_poll(struct napi_struct *napi, int limit)
+ //	DBG("%s: processing RX ring\n", dev->name);
+ 	rx_done = ag71xx_rx_packets(ag, limit);
+ 
+-	ag71xx_debugfs_update_napi_stats(ag, rx_done, tx_done);
++//	ag71xx_debugfs_update_napi_stats(ag, rx_done, tx_done);
+ 
+ 	if (rx_ring->buf[rx_ring->dirty % rx_ring_size].rx_buf == NULL)
+ 		goto oom;
+@@ -1183,7 +1183,7 @@ static irqreturn_t ag71xx_interrupt(int irq, void *dev_id)
+ 		napi_schedule(&ag->napi);
+ 	}
+ 
+-	ag71xx_debugfs_update_int_stats(ag, status);
++//	ag71xx_debugfs_update_int_stats(ag, status);
+ 
+ 	return IRQ_HANDLED;
+ }
+diff --git a/target/linux/ar71xx/patches-4.4/010-no-l2-cache-runtime-check.patch b/target/linux/ar71xx/patches-4.4/010-no-l2-cache-runtime-check.patch
+new file mode 100644
+index 0000000000..7ee5809d87
+--- /dev/null
++++ b/target/linux/ar71xx/patches-4.4/010-no-l2-cache-runtime-check.patch
+@@ -0,0 +1,25 @@
++--- a/arch/mips/include/asm/mach-ath79/cpu-feature-overrides.h
+++++ b/arch/mips/include/asm/mach-ath79/cpu-feature-overrides.h
++@@ -22,6 +22,7 @@
++ #define cpu_has_4k_cache	1
++ #define cpu_has_tx39_cache	0
++ #define cpu_has_sb1_cache	0
+++#define cpu_has_inclusive_pcaches	0
++ #define cpu_has_fpu		0
++ #define cpu_has_32fpr		0
++ #define cpu_has_counter		1
++@@ -32,12 +33,12 @@
++ #define cpu_has_ejtag		1
++ #define cpu_has_llsc		1
++ 
++-#define cpu_has_mips16		1
+++#define cpu_has_mips16		0
++ #define cpu_has_mdmx		0
++ #define cpu_has_mips3d		0
++ #define cpu_has_smartmips	0
++ 
++-#define cpu_has_mips32r1	1
+++#define cpu_has_mips32r1	0
++ #define cpu_has_mips32r2	1
++ #define cpu_has_mips64r1	0
++ #define cpu_has_mips64r2	0
+diff --git a/target/linux/generic/patches-4.4/654-avoid_skb_cow_realloc.patch b/target/linux/generic/patches-4.4/654-avoid_skb_cow_realloc.patch
+new file mode 100644
+index 0000000000..dce80ac031
+--- /dev/null
++++ b/target/linux/generic/patches-4.4/654-avoid_skb_cow_realloc.patch
+@@ -0,0 +1,20 @@
++--- a/include/linux/skbuff.h
+++++ b/include/linux/skbuff.h
++@@ -2570,11 +2570,15 @@ static inline int skb_try_make_writable(
++ static inline int __skb_cow(struct sk_buff *skb, unsigned int headroom,
++ 			    int cloned)
++ {
+++	unsigned int alloc_headroom = headroom;
++ 	int delta = 0;
++ 
++-	if (headroom > skb_headroom(skb))
+++	if (headroom < NET_SKB_PAD)
+++		alloc_headroom = NET_SKB_PAD;
+++	if (headroom > skb_headroom(skb) ||
+++	    (cloned && alloc_headroom > skb_headroom(skb))) {
++ 		delta = headroom - skb_headroom(skb);
++-
+++	}
++ 	if (delta || cloned)
++ 		return pskb_expand_head(skb, ALIGN(delta, NET_SKB_PAD), 0,
++ 					GFP_ATOMIC);
+-- 
+2.12.1
+

@@ -1,0 +1,288 @@
+From 94de1ef73bf758a7a6c6cb680af4ac265cbbee0c Mon Sep 17 00:00:00 2001
+From: hobbsau <adrianhobbs@gmail.com>
+Date: Sun, 26 Mar 2017 18:18:22 +1100
+Subject: [PATCH] patch_bundle1
+
+---
+ config/Config-devel.in                             |  2 +-
+ config/Config-kernel.in                            | 12 ++++++------
+ include/package-defaults.mk                        |  2 +-
+ include/package.mk                                 |  2 +-
+ include/target.mk                                  |  9 ++++++---
+ package/libs/libnl-tiny/src/Makefile               |  2 +-
+ scripts/target-metadata.pl                         |  2 +-
+ target/linux/ar71xx/Makefile                       |  5 +++--
+ target/linux/ar71xx/image/lzma-loader/src/Makefile |  6 +++---
+ toolchain/Config.in                                |  3 ++-
+ toolchain/binutils/Config.in                       |  2 +-
+ toolchain/gcc/Config.in                            |  2 +-
+ toolchain/gcc/final/Makefile                       |  4 +++-
+ toolchain/musl/common.mk                           |  3 ++-
+ 14 files changed, 32 insertions(+), 24 deletions(-)
+
+diff --git a/config/Config-devel.in b/config/Config-devel.in
+index 1ea66720b8..4046fdf86e 100644
+--- a/config/Config-devel.in
++++ b/config/Config-devel.in
+@@ -6,7 +6,7 @@
+ 
+ menuconfig DEVEL
+ 	bool "Advanced configuration options (for developers)"
+-	default n
++	default y
+ 
+ 	config BROKEN
+ 		bool "Show broken platforms / packages" if DEVEL
+diff --git a/config/Config-kernel.in b/config/Config-kernel.in
+index a4c46f55ae..c08ae93cbf 100644
+--- a/config/Config-kernel.in
++++ b/config/Config-kernel.in
+@@ -27,7 +27,7 @@ config KERNEL_PRINTK
+ config KERNEL_CRASHLOG
+ 	bool "Crash logging"
+ 	depends on !(arm || powerpc || sparc || TARGET_uml || i386 || x86_64)
+-	default y
++	default n
+ 
+ config KERNEL_SWAP
+ 	bool "Support for paging of anonymous memory (swap)"
+@@ -35,7 +35,7 @@ config KERNEL_SWAP
+ 
+ config KERNEL_DEBUG_FS
+ 	bool "Compile the kernel with debug filesystem enabled"
+-	default y
++	default n
+ 	help
+ 	  debugfs is a virtual file system that kernel developers use to put
+ 	  debugging files into. Enable this option to be able to read and
+@@ -62,7 +62,7 @@ config KERNEL_PROFILING
+ 
+ config KERNEL_KALLSYMS
+ 	bool "Compile the kernel with symbol table information"
+-	default y if !SMALL_FLASH
++	default n
+ 	help
+ 	  This will give you more information in stack traces from kernel oopses.
+ 
+@@ -107,7 +107,7 @@ config KERNEL_DEBUG_KERNEL
+ 
+ config KERNEL_DEBUG_INFO
+ 	bool "Compile the kernel with debug information"
+-	default y
++	default n
+ 	select KERNEL_DEBUG_KERNEL
+ 	help
+ 	  This will compile your kernel and modules with debug information.
+@@ -188,7 +188,7 @@ config KERNEL_BLK_DEV_BSG
+ 
+ config KERNEL_MAGIC_SYSRQ
+ 	bool "Compile the kernel with SysRq support"
+-	default y
++	default n
+ 
+ config KERNEL_DEBUG_PINCTRL
+ 	bool "Compile the kernel with pinctrl debugging"
+@@ -204,7 +204,7 @@ config KERNEL_COREDUMP
+ config KERNEL_ELF_CORE
+ 	bool "Enable process core dump support"
+ 	select KERNEL_COREDUMP
+-	default y
++	default n
+ 
+ config KERNEL_PROVE_LOCKING
+ 	bool "Enable kernel lock checking"
+diff --git a/include/package-defaults.mk b/include/package-defaults.mk
+index 487811c0e2..51e780bdff 100644
+--- a/include/package-defaults.mk
++++ b/include/package-defaults.mk
+@@ -5,7 +5,7 @@
+ # See /LICENSE for more information.
+ #
+ 
+-PKG_DEFAULT_DEPENDS = +libc +SSP_SUPPORT:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread
++PKG_DEFAULT_DEPENDS = +libc +SSP_SUPPORT:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libpthread
+ 
+ ifneq ($(PKG_NAME),toolchain)
+   PKG_FIXUP_DEPENDS = $(if $(filter kmod-%,$(1)),$(2),$(PKG_DEFAULT_DEPENDS) $(filter-out $(PKG_DEFAULT_DEPENDS),$(2)))
+diff --git a/include/package.mk b/include/package.mk
+index 3248517657..990296c1be 100644
+--- a/include/package.mk
++++ b/include/package.mk
+@@ -14,7 +14,7 @@ include $(INCLUDE_DIR)/download.mk
+ PKG_BUILD_DIR ?= $(BUILD_DIR)/$(PKG_NAME)$(if $(PKG_VERSION),-$(PKG_VERSION))
+ PKG_INSTALL_DIR ?= $(PKG_BUILD_DIR)/ipkg-install
+ PKG_BUILD_PARALLEL ?=
+-PKG_USE_MIPS16 ?= 1
++PKG_USE_MIPS16 ?= 0
+ PKG_IREMAP ?= 1
+ 
+ MAKE_J:=$(if $(MAKE_JOBSERVER),$(MAKE_JOBSERVER) $(if $(filter 3.% 4.0 4.1,$(MAKE_VERSION)),-j))
+diff --git a/include/target.mk b/include/target.mk
+index 30994485e1..ec126a63b3 100644
+--- a/include/target.mk
++++ b/include/target.mk
+@@ -162,11 +162,14 @@ ifeq ($(DUMP),1)
+     else
+       CPU_TYPE ?= mips32
+     endif
+-    CPU_CFLAGS += -mno-branch-likely
++    CPU_CFLAGS += -mno-branch-likely -mno-mips16 -mno-interlink-compressed -msym32 -mframe-header-opt
+     CPU_CFLAGS_mips32 = -mips32 -mtune=mips32
+     CPU_CFLAGS_mips64 = -mips64 -mtune=mips64 -mabi=64
+-    CPU_CFLAGS_24kc = -mips32r2 -mtune=24kc
+-    CPU_CFLAGS_74kc = -mips32r2 -mtune=74kc
++    CPU_CFLAGS_24kc = -march=24kc
++    CPU_CFLAGS_24kec = -march=24kec
++    CPU_CFLAGS_34kc = -march=34kc
++    CPU_CFLAGS_74kc = -march=74kc
++    CPU_CFLAGS_1004kc = -march=1004kc
+     CPU_CFLAGS_octeon = -march=octeon -mabi=64
+   endif
+   ifeq ($(ARCH),i386)
+diff --git a/package/libs/libnl-tiny/src/Makefile b/package/libs/libnl-tiny/src/Makefile
+index 6f37160a8c..24946ea5be 100644
+--- a/package/libs/libnl-tiny/src/Makefile
++++ b/package/libs/libnl-tiny/src/Makefile
+@@ -1,6 +1,6 @@
+ CC=gcc
+ WFLAGS=-Wall
+-CFLAGS=-O2
++CFLAGS=$(TARGET_CFLAGS)
+ INCLUDES=-Iinclude
+ 
+ LIBNAME=libnl-tiny.so
+diff --git a/scripts/target-metadata.pl b/scripts/target-metadata.pl
+index 31de3c74c8..c452febda2 100755
+--- a/scripts/target-metadata.pl
++++ b/scripts/target-metadata.pl
+@@ -203,7 +203,7 @@ endchoice
+ 
+ choice
+ 	prompt "Target Profile"
+-	default TARGET_MULTI_PROFILE if BUILDBOT
++	default TARGET_ar71xx_generic_DEVICE_archer-c7-v2
+ 
+ EOF
+ 	foreach my $target (@target) {
+diff --git a/target/linux/ar71xx/Makefile b/target/linux/ar71xx/Makefile
+index 4341a9a47a..324d304074 100644
+--- a/target/linux/ar71xx/Makefile
++++ b/target/linux/ar71xx/Makefile
+@@ -10,7 +10,8 @@ ARCH:=mips
+ BOARD:=ar71xx
+ BOARDNAME:=Atheros AR7xxx/AR9xxx
+ FEATURES:=
+-CPU_TYPE:=24kc
++CPU_TYPE:=74kc
++CPU_SUBTYPE:=dsp2
+ SUBTARGETS:=generic nand mikrotik
+ 
+ KERNEL_PATCHVER:=4.4
+@@ -19,6 +20,6 @@ include $(INCLUDE_DIR)/target.mk
+ 
+ DEFAULT_PACKAGES += \
+ 	kmod-gpio-button-hotplug swconfig \
+-	kmod-ath9k wpad-mini uboot-envtools
++	kmod-ath9k wpad
+ 
+ $(eval $(call BuildTarget))
+diff --git a/target/linux/ar71xx/image/lzma-loader/src/Makefile b/target/linux/ar71xx/image/lzma-loader/src/Makefile
+index 5f10bdb8f1..84c2cd37bb 100644
+--- a/target/linux/ar71xx/image/lzma-loader/src/Makefile
++++ b/target/linux/ar71xx/image/lzma-loader/src/Makefile
+@@ -32,10 +32,10 @@ BIN_FLAGS	:= -O binary -R .reginfo -R .note -R .comment -R .mdebug \
+ 
+ CFLAGS		= -D__KERNEL__ -Wall -Wstrict-prototypes -Wno-trigraphs -Os \
+ 		  -fno-strict-aliasing -fno-common -fomit-frame-pointer -G 0 \
+-		  -mno-abicalls -fno-pic -ffunction-sections -pipe -mlong-calls \
++		  -mno-abicalls -fno-pic -ffunction-sections -pipe \
+ 		  -fno-common -ffreestanding -fhonour-copts \
+-		  -mabi=32 -march=mips32r2 \
+-		  -Wa,-32 -Wa,-march=mips32r2 -Wa,-mips32r2 -Wa,--trap
++		  -mabi=32 -march=74kc -mno-branch-likely -mno-mips16 -mno-interlink-compressed -msym32 -fno-caller-saves -fomit-frame-pointer -mframe-header-opt \
++		  -Wa,-32 -Wa,-march=74kc -mno-branch-likely -mno-mips16 -mno-interlink-compressed -msym32 -fno-caller-saves -fomit-frame-pointer -mframe-header-opt -Wa,-march=74kc -mno-branch-likely -mno-mips16 -mno-interlink-compressed -msym32 -fno-caller-saves -fomit-frame-pointer -mframe-header-opt -Wa,--trap
+ CFLAGS		+= -D_LZMA_PROB32
+ 
+ ASFLAGS		= $(CFLAGS) -D__ASSEMBLY__
+diff --git a/toolchain/Config.in b/toolchain/Config.in
+index b53b8e63ec..11eed77c69 100644
+--- a/toolchain/Config.in
++++ b/toolchain/Config.in
+@@ -28,7 +28,7 @@ menuconfig TARGET_OPTIONS
+ 	config USE_MIPS16
+ 		bool "Build packages with MIPS16 instructions" if TARGET_OPTIONS
+ 		depends on HAS_MIPS16
+-		default y
++		default n
+ 		help
+ 		  If your target CPU does support the MIPS16 instruction set
+ 		  and you want to use it for packages, enable this option.
+@@ -163,6 +163,7 @@ config NEED_TOOLCHAIN
+ menuconfig TOOLCHAINOPTS
+ 	bool "Toolchain Options"  if DEVEL
+ 	depends on NEED_TOOLCHAIN
++	default y
+ 
+ menuconfig EXTRA_TARGET_ARCH
+ 	bool
+diff --git a/toolchain/binutils/Config.in b/toolchain/binutils/Config.in
+index 9e535c4b99..5a22693c85 100644
+--- a/toolchain/binutils/Config.in
++++ b/toolchain/binutils/Config.in
+@@ -2,7 +2,7 @@
+ 
+ choice
+ 	prompt "Binutils Version" if TOOLCHAINOPTS
+-	default BINUTILS_USE_VERSION_2_25_1 if !arc
++	default BINUTILS_USE_VERSION_2_27 if !arc
+ 	default BINUTILS_USE_VERSION_2_26_ARC if arc
+ 	help
+ 	  Select the version of binutils you wish to use.
+diff --git a/toolchain/gcc/Config.in b/toolchain/gcc/Config.in
+index 34c597c9e0..07aa90cdab 100644
+--- a/toolchain/gcc/Config.in
++++ b/toolchain/gcc/Config.in
+@@ -3,7 +3,7 @@
+ choice
+ 	prompt "GCC compiler Version" if TOOLCHAINOPTS
+ 	default GCC_USE_VERSION_4_8_ARC if arc
+-	default GCC_USE_VERSION_5
++	default GCC_USE_VERSION_6
+ 	help
+ 	  Select the version of gcc you wish to use.
+ 
+diff --git a/toolchain/gcc/final/Makefile b/toolchain/gcc/final/Makefile
+index 01fec38027..14ef15174d 100644
+--- a/toolchain/gcc/final/Makefile
++++ b/toolchain/gcc/final/Makefile
+@@ -7,9 +7,11 @@ GCC_CONFIGURE += \
+ 	--disable-libsanitizer \
+ 	--enable-languages=$(TARGET_LANGUAGES) \
+ 	--enable-shared \
+-	--enable-threads \
++	--enable-threads=posix \
+ 	--with-slibdir=$(TOOLCHAIN_DIR)/lib \
+ 	--enable-lto \
++	--enable-libstdcxx-threads \
++	--disable-nls --with-mips-plt --enable-default-pie \
+ 	--with-libelf=$(TOPDIR)/staging_dir/host
+ 
+ ifdef CONFIG_USE_MUSL
+diff --git a/toolchain/musl/common.mk b/toolchain/musl/common.mk
+index bfe8eebc7b..0f2e7fb4ab 100644
+--- a/toolchain/musl/common.mk
++++ b/toolchain/musl/common.mk
+@@ -34,8 +34,9 @@ MUSL_CONFIGURE:= \
+ 		--prefix=/ \
+ 		--host=$(GNU_HOST_NAME) \
+ 		--target=$(REAL_GNU_TARGET_NAME) \
++		--enable-visibility \
+ 		--disable-gcc-wrapper \
+-		--enable-debug
++		--disable-debug
+ 
+ define Host/Prepare
+ 	$(call Host/Prepare/Default)
+-- 
+2.12.1
+
