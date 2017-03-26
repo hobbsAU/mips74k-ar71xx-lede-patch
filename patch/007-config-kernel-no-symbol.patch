@@ -44,10 +44,10 @@ index 4c191f0..2a37936 100644
  	bool "Compile the kernel with SysRq support"
 -	default y
 +	default n
- 
- config KERNEL_COREDUMP
- 	bool
-@@ -196,7 +196,7 @@ config KERNEL_COREDUMP
+
+ config KERNEL_DEBUG_PINCTRL
+	bool "Compile the kernel with pinctrl debugging"
+@@ -204,7 +204,7 @@ config KERNEL_COREDUMP
  config KERNEL_ELF_CORE
  	bool "Enable process core dump support"
  	select KERNEL_COREDUMP

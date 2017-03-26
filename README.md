@@ -1,4 +1,4 @@
-Custom LEDE Patch For TL-WDR3500/3600/4300/4310/MW4350R
+LEDE 17.01 Performance Patch For Archer C7
 ======================================================
 
 Dependencies
@@ -6,20 +6,18 @@ Dependencies
 
 * LEDE BuildRoot
 * LEDE BuildRoot Dependencies
-* Java Runtime
 
 How to use
 ----------
 
 * Install all the development packages required for LEDE BuildRoot
-* Install Java Runtime
 * Clone the LEDE Repository
 
-    git clone https://github.com/lede-project/source.git lede
+    git clone -b lede-17.01 https://github.com/lede-project/source.git lede
 
 Clone this Repository and copy into the LEDE repository
 
-    git clone https://github.com/gwlim/mips74k-lede-patch.git temp ; mv temp/* lede/; rm -rf temp
+    git clone -b lede-17.01 git@github.com:hobbsAU/mips74k-ar71xx-lede-patch.git temp; mv temp/* lede/; rm -rf temp
 
 Change directory into the LEDE Repository
 
@@ -29,7 +27,7 @@ Run the script
 
 ./patch_LEDE.sh
 
-Make Menuconfig Default Target Profile is TL-WDR4300 (all the packages and config is inside)
+Make Menuconfig Default Target is archer-c7-v2 (all the packages and config is inside)
 
     make menuconfig
 

@@ -7,7 +7,7 @@ index 31de3c7..f7c82c5 100755
  choice
  	prompt "Target Profile"
 -	default TARGET_MULTI_PROFILE if BUILDBOT
-+	default TARGET_ar71xx_generic_DEVICE_tl-wdr4300-v1
++	default TARGET_ar71xx_generic_DEVICE_archer-c7-v2
  
  EOF
  	foreach my $target (@target) {
