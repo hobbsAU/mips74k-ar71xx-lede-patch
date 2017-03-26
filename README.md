@@ -17,7 +17,7 @@ How to use
 
 Clone this Repository and copy into the LEDE repository
 
-    git clone -b lede-17.01 git@github.com:hobbsAU/mips74k-ar71xx-lede-patch.git temp; mv temp/* lede/; rm -rf temp
+    git clone -b lede-17.01 git@github.com:hobbsAU/mips74k-ar71xx-lede-patch.git temp; mv temp/perf_patches lede/; mv temp/patch_perf_LEDE.sh lede/; rm -rf temp
 
 Change directory into the LEDE Repository
 
@@ -25,7 +25,7 @@ Change directory into the LEDE Repository
 
 Run the script
 
-./patch_LEDE.sh
+./patch_perf_LEDE.sh
 
 Make Menuconfig Default Target is archer-c7-v2 (all the packages and config is inside)
 
