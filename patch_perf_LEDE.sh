@@ -4,7 +4,7 @@ make dirclean
 ./scripts/feeds install -a
         for i in $( ls perf_patches ); do
             echo Applying patch $i
-            patch -p1 < patch/$i
+            patch -p1 < perf_patches/$i
         done
 make defconfig
 rm .config
